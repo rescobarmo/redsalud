@@ -34,8 +34,8 @@ $paginaActual = basename($_SERVER['PHP_SELF']);
             </a>
             <a href="<?= APP_URL ?>/pages/campanas.php"
                class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm <?= $paginaActual === 'campanas.php' ? 'active text-white' : 'text-slate-300' ?>">
-                <i class="fas fa-bullhorn w-5 text-center"></i>
-                Campañas
+                <i class="fas fa-comments w-5 text-center"></i>
+                Red Salud
             </a>
             <a href="<?= APP_URL ?>/pages/leads.php"
                class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm <?= $paginaActual === 'leads.php' ? 'active text-white' : 'text-slate-300' ?>">
