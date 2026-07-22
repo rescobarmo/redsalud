@@ -339,7 +339,7 @@ new Chart(document.getElementById('chartIngresos'), {
         },
         scales: {
             y: {
-                beginAtZero: false,
+                beginAtZero: true,
                 ticks: {
                     callback: v => {
                         if (v >= 1000000) return '$' + (v / 1000000).toFixed(1) + 'M';
