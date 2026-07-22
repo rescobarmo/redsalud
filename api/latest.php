@@ -7,7 +7,7 @@ try {
     $pdo = getDB();
     $desde = $_GET['desde'] ?? date('Y-m-d H:i:s', strtotime('-1 hour'));
 
-    $stmt = $pdo->prepare("SELECT * FROM redsalud WHERE fecha_creacion >= ? ORDER BY fecha_creacion ASC");
+    $stmt = $pdo->prepare("SELECT * FROM redsalud WHERE fecha_creacion > ? ORDER BY fecha_creacion ASC");
     $stmt->execute([$desde]);
     $registros = $stmt->fetchAll();
 
