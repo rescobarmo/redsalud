@@ -292,10 +292,18 @@ new Chart(document.getElementById('chartIngresos'), {
     options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: true, position: 'top', labels: { usePointStyle: true, boxWidth: 6 } } },
+        plugins: {
+            legend: { display: true, position: 'top', labels: { usePointStyle: true, boxWidth: 6 } },
+            tooltip: {
+                callbacks: {
+                    label: ctx => ctx.dataset.label + ': $' + Number(ctx.raw).toLocaleString('es-CL')
+                }
+            }
+        },
         scales: {
             y: {
-                beginAtZero: true,
+                beginAtZero: false,
+                grace: '10%',
                 ticks: {
                     callback: v => {
                         if (v >= 1000000) return '$' + (v / 1000000).toFixed(1) + 'M';
@@ -306,7 +314,8 @@ new Chart(document.getElementById('chartIngresos'), {
             },
             x: { grid: { display: false } }
         },
-        animation: { duration: 800, easing: 'easeOutQuart' }
+        animation: { duration: 800, easing: 'easeOutQuart' },
+        elements: { point: { radius: 4, hoverRadius: 6 } }
     }
 });
 
