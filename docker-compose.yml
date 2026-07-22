@@ -4,7 +4,7 @@ services:
     ports:
       - "80:80"
     environment:
-      DB_HOST: rsr-srv-rsr-phpmyadmin.jdseuk.easypanel.host
+      DB_HOST: rsr_srv_rsr
       DB_PORT: 3306
       DB_NAME: marketing
       DB_USER: rsr
