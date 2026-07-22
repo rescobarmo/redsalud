@@ -180,4 +180,100 @@ $coloresCategoria = ['Sin Categoría' => 'bg-slate-100 text-slate-600', 'VIP' =>
         </div>
     </main>
 </div>
+<script>
+let ultimoTimestamp = '<?= $conversaciones[0]['fecha_creacion'] ?? date('Y-m-d H:i:s') ?>';
+let polling = true;
+
+function cargarNuevos() {
+    if (!polling) return;
+    fetch('<?= APP_URL ?>/api/latest.php?desde=' + encodeURIComponent(ultimoTimestamp))
+        .then(r => r.json())
+        .then(resp => {
+            if (!resp.success || resp.total === 0) return;
+            ultimoTimestamp = resp.ultimo;
+            const tbody = document.querySelector('tbody');
+            const emptyRow = tbody.querySelector('td[colspan]');
+            if (emptyRow) tbody.innerHTML = '';
+
+            resp.data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition-colors nuevo-registro';
+                tr.style.animation = 'fadeIn 0.5s ease';
+                const avatar = (row.nombre || row.numero).substring(0, 2).toUpperCase();
+                tr.innerHTML = `
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-full bg-blue-500/20 flex items-center justify-center text-sm font-bold text-blue-600">${avatar}</div>
+                            <div><p class="font-medium text-slate-800">${escapeHtml(row.nombre || 'Sin nombre')}</p></div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4"><span class="font-mono text-sm text-slate-600">${escapeHtml(row.numero)}</span></td>
+                    <td class="px-6 py-4 max-w-md"><p class="text-slate-700 truncate">${escapeHtml(row.conversacion)}</p></td>
+                    <td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">${escapeHtml(row.categoria_cliente)}</span></td>
+                    <td class="px-6 py-4 text-right whitespace-nowrap">
+                        <p class="text-sm text-slate-600">${formatDate(row.fecha_creacion)}</p>
+                        <p class="text-xs text-slate-400">${formatTime(row.fecha_creacion)}</p>
+                    </td>
+                `;
+                tbody.prepend(tr);
+            });
+
+            mostrarToast(resp.total);
+            actualizarResumen();
+        })
+        .catch(() => {});
+}
+
+function mostrarToast(cantidad) {
+    const existente = document.querySelector('.toast-nuevos');
+    if (existente) existente.remove();
+    const toast = document.createElement('div');
+    toast.className = 'toast-nuevos fixed bottom-6 right-6 bg-blue-600 text-white px-5 py-3 rounded-xl shadow-lg z-50 flex items-center gap-3 fade-in';
+    toast.innerHTML = `<i class="fas fa-bell"></i> <span class="font-medium">${cantidad} nuevo(s) registro(s)</span>`;
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.5s'; setTimeout(() => toast.remove(), 500); }, 4000);
+}
+
+function actualizarResumen() {
+    fetch('<?= APP_URL ?>/api/checkdata.php')
+        .then(r => r.json())
+        .then(d => {
+            const cards = document.querySelectorAll('.stat-card p.text-2xl');
+            if (cards.length >= 4 && d.redsalud !== undefined) {
+                cards[0].textContent = d.redsalud;
+            }
+        })
+        .catch(() => {});
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+function parseDate(dt) {
+    if (!dt) return null;
+    const [f, h] = dt.split(' ');
+    const [y, m, d] = f.split('-').map(Number);
+    const [hh, mi, ss] = h ? h.split(':').map(Number) : [0, 0, 0];
+    return new Date(y, m - 1, d, hh, mi, ss);
+}
+
+function formatDate(dt) {
+    if (!dt) return '-';
+    const d = parseDate(dt);
+    return d.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function formatTime(dt) {
+    if (!dt) return '';
+    const d = parseDate(dt);
+    return d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+}
+
+document.addEventListener('visibilitychange', () => { polling = !document.hidden; });
+setInterval(cargarNuevos, 5000);
+</script>
 <?php include __DIR__ . '/../includes/footer.php'; ?>
