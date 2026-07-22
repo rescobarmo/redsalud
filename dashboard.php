@@ -27,6 +27,8 @@ $statsGenerales = $pdo->query("
 $totalCampañas = $pdo->query("SELECT COUNT(*) as total, SUM(CASE WHEN estado = 'activa' THEN 1 ELSE 0 END) as activas FROM campanas")->fetch();
 $totalLeads = $pdo->query("SELECT COUNT(*) as total, SUM(CASE WHEN estado = 'ganado' THEN 1 ELSE 0 END) as ganados FROM leads")->fetch();
 
+$hayDatosMetricas = ($statsGenerales['ingresos_totales'] > 0 || $statsGenerales['gasto_total'] > 0);
+
 $ingresosPorMes = $pdo->query("
     SELECT
         DATE_FORMAT(fecha, '%Y-%m') as mes,
@@ -81,6 +83,12 @@ $visitasRecientes = $pdo->query("
     LIMIT 14
 ")->fetchAll();
 $visitasRecientes = array_reverse($visitasRecientes);
+
+$tieneIngresos = !empty($ingresosPorMes) && array_sum(array_column($ingresosPorMes, 'ingresos')) > 0;
+$tieneLeads = !empty($leadsPorEstado) && array_sum(array_column($leadsPorEstado, 'total')) > 0;
+$tieneCanales = !empty($canalesRendimiento);
+$tieneTopCampañas = !empty($topCampañas) && array_sum(array_column($topCampañas, 'ingresos')) > 0;
+$tieneTrafico = !empty($visitasRecientes);
 ?>
 <?php $titulo = 'Dashboard'; include __DIR__ . '/includes/header.php'; ?>
 
@@ -115,7 +123,7 @@ $visitasRecientes = array_reverse($visitasRecientes);
                             <i class="fas fa-dollar-sign text-green-600"></i>
                         </div>
                     </div>
-                    <p class="text-2xl font-bold text-slate-800">$<?= number_format($statsGenerales['ingresos_totales'], 0, ',', '.') ?></p>
+                    <p class="text-2xl font-bold text-slate-800"><?= number_format($statsGenerales['ingresos_totales'], 0, ',', '.') ?></p>
                     <p class="text-xs text-slate-400 mt-1">
                         <i class="fas fa-arrow-up text-green-500 mr-1"></i>
                         ROI: <span class="font-semibold <?= $statsGenerales['roi'] >= 0 ? 'text-green-500' : 'text-red-500' ?>"><?= $statsGenerales['roi'] ?>%</span>
@@ -128,10 +136,10 @@ $visitasRecientes = array_reverse($visitasRecientes);
                             <i class="fas fa-credit-card text-red-600"></i>
                         </div>
                     </div>
-                    <p class="text-2xl font-bold text-slate-800">$<?= number_format($statsGenerales['gasto_total'], 0, ',', '.') ?></p>
+                    <p class="text-2xl font-bold text-slate-800"><?= number_format($statsGenerales['gasto_total'], 0, ',', '.') ?></p>
                     <p class="text-xs text-slate-400 mt-1">
                         <i class="fas fa-receipt mr-1"></i>
-                        <?= $totalCampañas['activas'] ?> campañas activas
+                        <?= ($totalCampañas['activas'] ?? 0) ?> campañas activas
                     </p>
                 </div>
                 <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100">
@@ -141,10 +149,10 @@ $visitasRecientes = array_reverse($visitasRecientes);
                             <i class="fas fa-user-plus text-blue-600"></i>
                         </div>
                     </div>
-                    <p class="text-2xl font-bold text-slate-800"><?= $totalLeads['total'] ?></p>
+                    <p class="text-2xl font-bold text-slate-800"><?= $totalLeads['total'] ?? 0 ?></p>
                     <p class="text-xs text-slate-400 mt-1">
                         <i class="fas fa-check-circle text-blue-500 mr-1"></i>
-                        <?= $totalLeads['ganados'] ?> ganados
+                        <?= $totalLeads['ganados'] ?? 0 ?> ganados
                     </p>
                 </div>
                 <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100">
@@ -168,14 +176,30 @@ $visitasRecientes = array_reverse($visitasRecientes);
                         <h3 class="font-semibold text-slate-800">Ingresos vs Inversión</h3>
                         <span class="text-xs text-slate-400">Últimos 12 meses</span>
                     </div>
+                    <?php if ($tieneIngresos): ?>
                     <canvas id="chartIngresos" height="280"></canvas>
+                    <?php else: ?>
+                    <div class="flex flex-col items-center justify-center h-64 text-slate-400">
+                        <i class="fas fa-chart-line text-4xl mb-3 opacity-50"></i>
+                        <p class="font-medium">Sin datos disponibles</p>
+                        <p class="text-sm">Los gráficos se mostrarán cuando haya métricas registradas</p>
+                    </div>
+                    <?php endif; ?>
                 </div>
                 <div class="bg-white rounded-2xl p-6 border border-slate-100">
                     <div class="flex items-center justify-between mb-6">
                         <h3 class="font-semibold text-slate-800">Leads por Estado</h3>
-                        <span class="text-xs text-slate-400">Total: <?= $totalLeads['total'] ?></span>
+                        <span class="text-xs text-slate-400">Total: <?= $totalLeads['total'] ?? 0 ?></span>
                     </div>
+                    <?php if ($tieneLeads): ?>
                     <canvas id="chartLeads" height="280"></canvas>
+                    <?php else: ?>
+                    <div class="flex flex-col items-center justify-center h-64 text-slate-400">
+                        <i class="fas fa-users text-4xl mb-3 opacity-50"></i>
+                        <p class="font-medium">Sin leads registrados</p>
+                        <p class="text-sm">Los datos aparecerán al capturar prospectos</p>
+                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -185,6 +209,7 @@ $visitasRecientes = array_reverse($visitasRecientes);
                         <h3 class="font-semibold text-slate-800">Rendimiento por Canal</h3>
                         <span class="text-xs text-slate-400">Ingresos vs Gasto</span>
                     </div>
+                    <?php if ($tieneCanales): ?>
                     <div class="space-y-4">
                         <?php foreach ($canalesRendimiento as $canal): ?>
                             <?php $pctIngresos = $statsGenerales['ingresos_totales'] > 0 ? ($canal['ingresos'] / $statsGenerales['ingresos_totales'] * 100) : 0; ?>
@@ -206,12 +231,20 @@ $visitasRecientes = array_reverse($visitasRecientes);
                             </div>
                         <?php endforeach; ?>
                     </div>
+                    <?php else: ?>
+                    <div class="flex flex-col items-center justify-center h-64 text-slate-400">
+                        <i class="fas fa-arrow-trend-up text-4xl mb-3 opacity-50"></i>
+                        <p class="font-medium">Sin rendimiento de canales</p>
+                        <p class="text-sm">Los datos se mostrarán al registrar métricas</p>
+                    </div>
+                    <?php endif; ?>
                 </div>
                 <div class="bg-white rounded-2xl p-6 border border-slate-100">
                     <div class="flex items-center justify-between mb-6">
                         <h3 class="font-semibold text-slate-800">Top Campañas</h3>
                         <a href="<?= APP_URL ?>/pages/campanas.php" class="text-xs text-blue-600 hover:text-blue-700 font-medium">Ver todas →</a>
                     </div>
+                    <?php if ($tieneTopCampañas): ?>
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm">
                             <thead>
@@ -244,10 +277,17 @@ $visitasRecientes = array_reverse($visitasRecientes);
                             </tbody>
                         </table>
                     </div>
+                    <?php else: ?>
+                    <div class="flex flex-col items-center justify-center h-64 text-slate-400">
+                        <i class="fas fa-bullhorn text-4xl mb-3 opacity-50"></i>
+                        <p class="font-medium">Sin campañas activas</p>
+                        <p class="text-sm">Crea campañas para ver su rendimiento aquí</p>
+                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
 
-            <?php if (!empty($visitasRecientes)): ?>
+            <?php if ($tieneTrafico): ?>
             <div class="bg-white rounded-2xl p-6 border border-slate-100 fade-in">
                 <div class="flex items-center justify-between mb-6">
                     <h3 class="font-semibold text-slate-800">Tráfico del Sitio</h3>
@@ -261,6 +301,7 @@ $visitasRecientes = array_reverse($visitasRecientes);
 </div>
 
 <script>
+<?php if ($tieneIngresos): ?>
 const ingresosData = {
     labels: [<?php foreach ($ingresosPorMes as $m): ?>'<?= $m['mes'] ?>',<?php endforeach; ?>],
     datasets: [
@@ -294,16 +335,11 @@ new Chart(document.getElementById('chartIngresos'), {
         maintainAspectRatio: false,
         plugins: {
             legend: { display: true, position: 'top', labels: { usePointStyle: true, boxWidth: 6 } },
-            tooltip: {
-                callbacks: {
-                    label: ctx => ctx.dataset.label + ': $' + Number(ctx.raw).toLocaleString('es-CL')
-                }
-            }
+            tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': $' + Number(ctx.raw).toLocaleString('es-CL') } }
         },
         scales: {
             y: {
                 beginAtZero: false,
-                grace: '10%',
                 ticks: {
                     callback: v => {
                         if (v >= 1000000) return '$' + (v / 1000000).toFixed(1) + 'M';
@@ -318,7 +354,9 @@ new Chart(document.getElementById('chartIngresos'), {
         elements: { point: { radius: 4, hoverRadius: 6 } }
     }
 });
+<?php endif; ?>
 
+<?php if ($tieneLeads): ?>
 new Chart(document.getElementById('chartLeads'), {
     type: 'doughnut',
     data: {
@@ -338,8 +376,9 @@ new Chart(document.getElementById('chartLeads'), {
         cutout: '65%'
     }
 });
+<?php endif; ?>
 
-<?php if (!empty($visitasRecientes)): ?>
+<?php if ($tieneTrafico): ?>
 new Chart(document.getElementById('chartTrafico'), {
     type: 'bar',
     data: {
@@ -365,7 +404,6 @@ new Chart(document.getElementById('chartTrafico'), {
         plugins: { legend: { display: true, position: 'top', labels: { usePointStyle: true, boxWidth: 6 } } },
         scales: {
             y: {
-                beginAtZero: true,
                 ticks: {
                     callback: v => {
                         if (v >= 1000) return (v / 1000).toFixed(1) + 'K';
