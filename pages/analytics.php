@@ -130,9 +130,18 @@ new Chart(document.getElementById('chartTraficoCanal'), {
         maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: {
-            y: { beginAtZero: true },
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: v => {
+                        if (v >= 1000) return (v / 1000).toFixed(1) + 'K';
+                        return v;
+                    }
+                }
+            },
             x: { grid: { display: false } }
-        }
+        },
+        animation: { duration: 600, easing: 'easeOutQuart' }
     }
 });
 </script>

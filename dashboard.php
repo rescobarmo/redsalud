@@ -294,9 +294,19 @@ new Chart(document.getElementById('chartIngresos'), {
         maintainAspectRatio: false,
         plugins: { legend: { display: true, position: 'top', labels: { usePointStyle: true, boxWidth: 6 } } },
         scales: {
-            y: { beginAtZero: true, ticks: { callback: v => '$' + (v/1000).toFixed(0) + 'k' } },
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: v => {
+                        if (v >= 1000000) return '$' + (v / 1000000).toFixed(1) + 'M';
+                        if (v >= 1000) return '$' + (v / 1000).toFixed(0) + 'K';
+                        return '$' + v;
+                    }
+                }
+            },
             x: { grid: { display: false } }
-        }
+        },
+        animation: { duration: 800, easing: 'easeOutQuart' }
     }
 });
 
@@ -345,9 +355,18 @@ new Chart(document.getElementById('chartTrafico'), {
         maintainAspectRatio: false,
         plugins: { legend: { display: true, position: 'top', labels: { usePointStyle: true, boxWidth: 6 } } },
         scales: {
-            y: { beginAtZero: true },
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: v => {
+                        if (v >= 1000) return (v / 1000).toFixed(1) + 'K';
+                        return v;
+                    }
+                }
+            },
             x: { grid: { display: false } }
-        }
+        },
+        animation: { duration: 600, easing: 'easeOutQuart' }
     }
 });
 <?php endif; ?>
