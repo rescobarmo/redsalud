@@ -127,9 +127,22 @@ document.querySelectorAll('.contact-checkbox').forEach(cb => {
     cb.addEventListener('change', function() {
         const id = this.dataset.id;
         const checked = this.checked;
-        const valor = checked ? 'LLAMADO' : 'COTIZANDO';
         const tr = this.closest('tr');
+        const obsInput = tr.querySelector('.obs-input');
 
+        if (!checked) {
+            obsInput.value = '';
+            const counter = obsInput.parentElement.querySelector('.obs-count');
+            if (counter) counter.textContent = '0/200';
+
+            fetch('<?= APP_URL ?>/api/update_redsalud.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ id, campo: 'obs', valor: '' })
+            });
+        }
+
+        const valor = checked ? 'LLAMADO' : 'COTIZANDO';
         fetch('<?= APP_URL ?>/api/update_redsalud.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
