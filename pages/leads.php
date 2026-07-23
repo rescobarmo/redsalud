@@ -4,16 +4,11 @@ requerirLogin();
 $pdo = getDB();
 
 $filtroBusqueda = $_GET['busqueda'] ?? '';
-$filtroCategoria = $_GET['categoria'] ?? '';
 
 $sql = "SELECT * FROM redsalud";
-$where = [];
+$where = ["LOWER(categoria_cliente) = 'cotizando' OR LOWER(categoria_cliente) = 'llamado'"];
 $params = [];
 
-if ($filtroCategoria) {
-    $where[] = "LOWER(categoria_cliente) = ?";
-    $params[] = strtolower($filtroCategoria);
-}
 if ($filtroBusqueda) {
     $where[] = "(nombre LIKE ? OR numero LIKE ? OR conversacion LIKE ?)";
     $p = "%$filtroBusqueda%";
@@ -25,8 +20,6 @@ $sql .= " ORDER BY fecha_actualizacion DESC, fecha_creacion DESC";
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $conversaciones = $stmt->fetchAll();
-
-$categorias = $pdo->query("SELECT DISTINCT LOWER(categoria_cliente) as cat FROM redsalud WHERE categoria_cliente IS NOT NULL AND categoria_cliente != '' ORDER BY cat")->fetchAll();
 ?>
 <?php $titulo = 'Contactos Red Salud'; include __DIR__ . '/../includes/header.php'; ?>
 <div class="flex min-h-screen">
@@ -35,8 +28,8 @@ $categorias = $pdo->query("SELECT DISTINCT LOWER(categoria_cliente) as cat FROM 
         <div class="max-w-7xl mx-auto">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
                 <div>
-                    <h1 class="text-2xl font-bold text-slate-800">Contactos Red Salud</h1>
-                    <p class="text-slate-500 mt-1">Gestión de conversaciones de WhatsApp</p>
+                    <h1 class="text-2xl font-bold text-slate-800">Contactos Cotizando</h1>
+                    <p class="text-slate-500 mt-1">Gestiona contactos que están cotizando y registra llamadas</p>
                 </div>
             </div>
 
@@ -47,16 +40,10 @@ $categorias = $pdo->query("SELECT DISTINCT LOWER(categoria_cliente) as cat FROM 
                                placeholder="Buscar por nombre, teléfono o conversación..."
                                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none text-sm">
                     </div>
-                    <select name="categoria" class="px-4 py-2.5 rounded-xl border border-slate-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none text-sm bg-white">
-                        <option value="">Todas las categorías</option>
-                        <?php foreach ($categorias as $c): ?>
-                            <option value="<?= htmlspecialchars($c['cat']) ?>" <?= $filtroCategoria === $c['cat'] ? 'selected' : '' ?>><?= htmlspecialchars(strtoupper($c['cat'])) ?></option>
-                        <?php endforeach; ?>
-                    </select>
                     <button type="submit" class="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors">
-                        <i class="fas fa-search mr-1"></i> Filtrar
+                        <i class="fas fa-search mr-1"></i> Buscar
                     </button>
-                    <?php if ($filtroCategoria || $filtroBusqueda): ?>
+                    <?php if ($filtroBusqueda): ?>
                         <a href="leads.php" class="px-4 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50 transition-colors">
                             <i class="fas fa-times mr-1"></i> Limpiar
                         </a>
@@ -140,7 +127,7 @@ document.querySelectorAll('.contact-checkbox').forEach(cb => {
     cb.addEventListener('change', function() {
         const id = this.dataset.id;
         const checked = this.checked;
-        const valor = checked ? 'LLAMADO' : 'SIN CATEGORÍA';
+        const valor = checked ? 'LLAMADO' : 'COTIZANDO';
         const tr = this.closest('tr');
 
         fetch('<?= APP_URL ?>/api/update_redsalud.php', {
