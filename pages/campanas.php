@@ -124,6 +124,10 @@ $coloresCategoria = [
                     <button type="submit" class="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors">
                         <i class="fas fa-search mr-1"></i> Filtrar
                     </button>
+                    <a href="<?= APP_URL ?>/api/export_excel.php?<?= http_build_query($_GET) ?>"
+                       class="px-6 py-2.5 bg-green-600 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-2">
+                        <i class="fas fa-file-excel"></i> Exportar Excel
+                    </a>
                     <?php if ($filtroBusqueda || $filtroCategoria): ?>
                         <a href="campanas.php" class="px-4 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50 transition-colors">
                             <i class="fas fa-times mr-1"></i> Limpiar
