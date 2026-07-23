@@ -25,8 +25,8 @@ $msgsPorDia = $pdo->query("
         COUNT(*) as total
     FROM redsalud
     WHERE fecha_creacion >= DATE_SUB(CURDATE(), INTERVAL 14 DAY)
-    GROUP BY DATE(fecha_creacion)
-    ORDER BY DATE(fecha_creacion) ASC
+    GROUP BY DATE_FORMAT(fecha_creacion, '%d/%m')
+    ORDER BY MIN(fecha_creacion) ASC
 ")->fetchAll();
 } catch (Exception $e) { die("Error query 2: " . $e->getMessage()); }
 
@@ -48,9 +48,13 @@ $categorias = $pdo->query("
 
 try {
 $ultimosContactos = $pdo->query("
-    SELECT numero, nombre, MAX(fecha_creacion) as ultimo
-    FROM redsalud
-    GROUP BY numero
+    SELECT r.numero, r.nombre, r.fecha_creacion as ultimo
+    FROM redsalud r
+    INNER JOIN (
+        SELECT numero, MAX(fecha_creacion) as max_fecha
+        FROM redsalud
+        GROUP BY numero
+    ) ult ON r.numero = ult.numero AND r.fecha_creacion = ult.max_fecha
     ORDER BY ultimo DESC
     LIMIT 10
 ")->fetchAll();
