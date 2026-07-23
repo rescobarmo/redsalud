@@ -41,7 +41,15 @@ $categorias = $pdo->query("
     ORDER BY total DESC
 ")->fetchAll();
 
-$coloresCategoria = ['Sin Categoría' => 'bg-slate-100 text-slate-600', 'VIP' => 'bg-purple-100 text-purple-700', 'Premium' => 'bg-yellow-100 text-yellow-700', 'Regular' => 'bg-blue-100 text-blue-700', 'Nuevo' => 'bg-green-100 text-green-700'];
+$coloresCategoria = [
+    'Sin Categoría' => 'bg-slate-100 text-slate-600',
+    'cotizando' => 'bg-red-600 text-white',
+    'COTIZANDO' => 'bg-red-600 text-white',
+    'respondio' => 'bg-green-600 text-white',
+    'RESPONDIO' => 'bg-green-600 text-white',
+    'realizado' => 'bg-blue-600 text-white',
+    'REALIZADO' => 'bg-blue-600 text-white',
+];
 ?>
 <?php $titulo = 'Red Salud'; include __DIR__ . '/../includes/header.php'; ?>
 <div class="flex min-h-screen">
@@ -109,7 +117,7 @@ $coloresCategoria = ['Sin Categoría' => 'bg-slate-100 text-slate-600', 'VIP' =>
                         <option value="">Todas las categorías</option>
                         <?php foreach ($categorias as $cat): ?>
                             <option value="<?= htmlspecialchars($cat['categoria_cliente']) ?>" <?= $filtroCategoria === $cat['categoria_cliente'] ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($cat['categoria_cliente']) ?> (<?= $cat['total'] ?>)
+                                <?= strtoupper(htmlspecialchars($cat['categoria_cliente'])) ?> (<?= $cat['total'] ?>)
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -164,7 +172,7 @@ $coloresCategoria = ['Sin Categoría' => 'bg-slate-100 text-slate-600', 'VIP' =>
                                 <td class="px-6 py-4">
                                     <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
                                         <?= $coloresCategoria[$row['categoria_cliente']] ?? 'bg-slate-100 text-slate-600' ?>">
-                                        <?= htmlspecialchars($row['categoria_cliente']) ?>
+                                        <?= strtoupper(htmlspecialchars($row['categoria_cliente'])) ?>
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-right whitespace-nowrap">
@@ -209,7 +217,7 @@ function cargarNuevos() {
                     </td>
                     <td class="px-6 py-4"><span class="font-mono text-sm text-slate-600">${escapeHtml(row.numero)}</span></td>
                     <td class="px-6 py-4 max-w-md"><p class="text-slate-700 truncate">${escapeHtml(row.conversacion)}</p></td>
-                    <td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">${escapeHtml(row.categoria_cliente)}</span></td>
+                    <td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getColorCategoria(row.categoria_cliente)}">${escapeHtml(row.categoria_cliente).toUpperCase()}</span></td>
                     <td class="px-6 py-4 text-right whitespace-nowrap">
                         <p class="text-sm text-slate-600">${formatDate(row.fecha_creacion)}</p>
                         <p class="text-xs text-slate-400">${formatTime(row.fecha_creacion)}</p>
@@ -244,6 +252,15 @@ function actualizarResumen() {
             }
         })
         .catch(() => {});
+}
+
+function getColorCategoria(cat) {
+    if (!cat) return 'bg-slate-100 text-slate-600';
+    const c = cat.toLowerCase();
+    if (c === 'cotizando') return 'bg-red-600 text-white';
+    if (c === 'respondio') return 'bg-green-600 text-white';
+    if (c === 'realizado') return 'bg-blue-600 text-white';
+    return 'bg-slate-100 text-slate-600';
 }
 
 function escapeHtml(str) {
