@@ -5,6 +5,7 @@ requerirLogin();
 $pdo = getDB();
 $usuario = usuarioActual();
 
+try {
 $stats = $pdo->query("
     SELECT
         COUNT(*) as total_msgs,
@@ -15,7 +16,9 @@ $stats = $pdo->query("
         COUNT(DISTINCT CASE WHEN categoria_cliente = 'realizado' OR categoria_cliente = 'REALIZADO' THEN id END) as realizado
     FROM redsalud
 ")->fetch();
+} catch (Exception $e) { die("Error query 1: " . $e->getMessage()); }
 
+try {
 $msgsPorDia = $pdo->query("
     SELECT
         DATE_FORMAT(fecha_creacion, '%d/%m') as dia,
@@ -25,7 +28,9 @@ $msgsPorDia = $pdo->query("
     GROUP BY DATE(fecha_creacion)
     ORDER BY DATE(fecha_creacion) ASC
 ")->fetchAll();
+} catch (Exception $e) { die("Error query 2: " . $e->getMessage()); }
 
+try {
 $categorias = $pdo->query("
     SELECT
         CASE
@@ -39,7 +44,9 @@ $categorias = $pdo->query("
     GROUP BY cat
     ORDER BY total DESC
 ")->fetchAll();
+} catch (Exception $e) { die("Error query 3: " . $e->getMessage()); }
 
+try {
 $ultimosContactos = $pdo->query("
     SELECT numero, nombre, MAX(fecha_creacion) as ultimo
     FROM redsalud
@@ -47,6 +54,7 @@ $ultimosContactos = $pdo->query("
     ORDER BY ultimo DESC
     LIMIT 10
 ")->fetchAll();
+} catch (Exception $e) { die("Error query 4: " . $e->getMessage()); }
 
 $tieneDatos = $stats['total_msgs'] > 0;
 ?>
