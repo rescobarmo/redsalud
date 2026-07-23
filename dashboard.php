@@ -144,7 +144,7 @@ $tieneDatos = $stats['total_msgs'] > 0;
                         <span class="text-xs text-slate-400">Últimos 14 días</span>
                     </div>
                     <?php if (!empty($msgsPorDia)): ?>
-                    <canvas id="chartMsgs" height="280"></canvas>
+                    <div style="height: 280px;"><canvas id="chartMsgs"></canvas></div>
                     <?php else: ?>
                     <div class="h-64 flex items-center justify-center text-slate-400">
                         <p>Sin datos en los últimos 14 días</p>
@@ -157,7 +157,7 @@ $tieneDatos = $stats['total_msgs'] > 0;
                         <span class="text-xs text-slate-400">distribución</span>
                     </div>
                     <?php if (!empty($categorias)): ?>
-                    <canvas id="chartCategorias" height="280"></canvas>
+                    <div style="height: 280px;"><canvas id="chartCategorias"></canvas></div>
                     <?php else: ?>
                     <div class="h-64 flex items-center justify-center text-slate-400">
                         <p>Sin categorías asignadas</p>
